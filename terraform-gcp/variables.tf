@@ -29,19 +29,19 @@ variable "model_id" {
 }
 
 variable "machine_type" {
-  description = "GCE Machine Type for the GPU node"
+  description = "GCE Machine Type for the compute node. Default is a small CPU-only machine for the LightGBM lab; switch to a GPU-capable type (e.g. n1-standard-4) when setting gpu_count > 0 for the optional vLLM path"
   type        = string
-  default     = "n1-standard-4"
+  default     = "e2-medium"
 }
 
 variable "gpu_type" {
-  description = "GPU accelerator type"
+  description = "GPU accelerator type (only used when gpu_count > 0)"
   type        = string
   default     = "nvidia-tesla-t4"
 }
 
 variable "gpu_count" {
-  description = "Number of GPUs to attach"
+  description = "Number of GPUs to attach. Default 0 = CPU-only node (LightGBM). Set to 1 to opt into the GPU + vLLM LLM path"
   type        = number
-  default     = 1
+  default     = 0
 }

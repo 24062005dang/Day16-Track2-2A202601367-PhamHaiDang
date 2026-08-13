@@ -172,7 +172,7 @@ resource "aws_instance" "bastion" {
   tags = { Name = "AI-Bastion-Host" }
 }
 
-# 5. GPU Instance
+# 5. Compute Instance (CPU + LightGBM by default; GPU + vLLM optional via var.enable_gpu)
 data "aws_ami" "deep_learning" {
   most_recent = true
   owners      = ["amazon"]
@@ -205,24 +205,24 @@ resource "aws_iam_instance_profile" "ai_profile" {
 }
 
 resource "aws_instance" "gpu_node" {
-  ami                    = data.aws_ami.deep_learning.id
-  instance_type          = "g4dn.xlarge" 
+  ami                    = var.enable_gpu ? data.aws_ami.deep_learning.id : data.aws_ami.ubuntu.id
+  instance_type          = var.enable_gpu ? var.gpu_instance_type : var.cpu_instance_type
   subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.gpu_sg.id]
   key_name               = aws_key_pair.lab_key.key_name
   iam_instance_profile   = aws_iam_instance_profile.ai_profile.name
 
   root_block_device {
-    volume_size = 150 
+    volume_size = var.enable_gpu ? 150 : 30
     volume_type = "gp3"
   }
 
-  user_data = templatefile("${path.module}/user_data.sh", {
+  user_data = var.enable_gpu ? templatefile("${path.module}/user_data_gpu.sh", {
     hf_token = var.hf_token
     model_id = var.model_id
-  })
+  }) : file("${path.module}/user_data_cpu.sh")
 
-  tags = { Name = "AI-Inference-Node" }
+  tags = { Name = var.enable_gpu ? "AI-GPU-Inference-Node" : "AI-CPU-LightGBM-Node" }
 }
 
 # 6. Load Balancer

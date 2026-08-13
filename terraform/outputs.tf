@@ -12,5 +12,6 @@ output "endpoint_url" {
 }
 
 output "gpu_private_ip" {
-  value = aws_instance.gpu_node.private_ip
+  description = "Private IP of the compute node (CPU/LightGBM by default, GPU/vLLM if var.enable_gpu = true)"
+  value       = aws_instance.gpu_node.private_ip
 }

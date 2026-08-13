@@ -83,7 +83,8 @@ resource "google_project_iam_member" "gpu_node_metric_writer" {
   member  = "serviceAccount:${google_service_account.gpu_node_sa.email}"
 }
 
-# 8. GPU Node (Compute Engine VM in Private Subnet)
+# 8. Compute Node (Compute Engine VM in Private Subnet) — CPU + LightGBM by default,
+#    GPU + vLLM optional when var.gpu_count > 0
 resource "google_compute_instance" "gpu_node" {
   name         = "ai-gpu-node"
   machine_type = var.machine_type
@@ -92,9 +93,9 @@ resource "google_compute_instance" "gpu_node" {
 
   boot_disk {
     initialize_params {
-      # Deep Learning VM image with CUDA pre-installed
-      image = "projects/deeplearning-platform-release/global/images/family/common-cu121-debian-11"
-      size  = 100
+      # GPU path needs the Deep Learning VM image (CUDA pre-installed); CPU path uses plain Debian
+      image = var.gpu_count > 0 ? "projects/deeplearning-platform-release/global/images/family/common-cu121-debian-11" : "projects/debian-cloud/global/images/family/debian-12"
+      size  = var.gpu_count > 0 ? 100 : 30
       type  = "pd-ssd"
     }
   }
@@ -105,13 +106,17 @@ resource "google_compute_instance" "gpu_node" {
     # No access_config block = no public IP (private only)
   }
 
-  guest_accelerator {
-    type  = var.gpu_type
-    count = var.gpu_count
+  dynamic "guest_accelerator" {
+    for_each = var.gpu_count > 0 ? [1] : []
+    content {
+      type  = var.gpu_type
+      count = var.gpu_count
+    }
   }
 
   scheduling {
-    on_host_maintenance = "TERMINATE"
+    # GPU-attached VMs cannot live-migrate, so they must TERMINATE on host maintenance
+    on_host_maintenance = var.gpu_count > 0 ? "TERMINATE" : "MIGRATE"
     automatic_restart   = true
   }
 
@@ -120,10 +125,10 @@ resource "google_compute_instance" "gpu_node" {
     scopes = ["cloud-platform"]
   }
 
-  metadata_startup_script = templatefile("${path.module}/user_data.sh", {
+  metadata_startup_script = var.gpu_count > 0 ? templatefile("${path.module}/user_data_gpu.sh", {
     hf_token = var.hf_token
     model_id = var.model_id
-  })
+  }) : file("${path.module}/user_data_cpu.sh")
 
   metadata = {
     enable-oslogin = "TRUE"

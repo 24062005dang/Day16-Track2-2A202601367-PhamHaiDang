@@ -9,12 +9,12 @@ output "api_endpoint" {
 }
 
 output "gpu_node_name" {
-  description = "Name of the GPU Compute Engine instance"
+  description = "Name of the compute node (CPU/LightGBM by default, GPU/vLLM if var.gpu_count > 0)"
   value       = google_compute_instance.gpu_node.name
 }
 
 output "gpu_node_zone" {
-  description = "Zone of the GPU instance"
+  description = "Zone of the compute node"
   value       = google_compute_instance.gpu_node.zone
 }
 
