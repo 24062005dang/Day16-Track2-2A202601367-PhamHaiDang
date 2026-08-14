@@ -32,7 +32,7 @@
 | 1 | Terminal chạy `python3 benchmark.py` — bảng kết quả benchmark (ảnh bị cắt phần trên của bảng; đầy đủ 10 metrics xem ở screenshot #2) | `screenshot_benchmark_results.png` |
 | 2 | Nội dung file `benchmark_result.json` trên Compute Node — đầy đủ 10 metrics | `screenshot_benchmark_json.png` |
 | 3 | Tài nguyên RAM (`free -h`) và Network (`ip -s link`) | `screenshot_resource_usage.png` |
-| 4 | AWS Billing Dashboard — bill summary kỳ 08/2026 | `screenshot_aws_billing.png` |
+| 4 | AWS Billing Dashboard — bill summary kỳ 08/2026 (Account ID đã được che vì lý do bảo mật) | `screenshot_aws_billing.png` |
 
 ---
 
